@@ -89,27 +89,37 @@ def initialize() {
             log.info "Installed Scenario: ${child.label}"
     }
 	if (vDimmer && tstat) {
-    	subscribe (vDimmer, "level", "thermoHandler")
+    	subscribe (vDimmer, "level", thermoHandler)
+        //subscribe(tstat, "temperature", thermoHandler)
+
 	}
 }
 //Thermostat Handler
 def thermoHandler(evt){
     // Get settings between limits
-    def tstatLevel = vDimmer.currentValue("level")
-    if (upLimit && vDimmer.currentValue("level") > upLimit){
+    def tstatLevel = vDimmer.currentValue("level") as int
+    def currentTemp = tstat.currentValue("temperature") as int
+
+	if (tstatLevel > upLimit){
     	tstatLevel = upLimit
+			//log.debug "Setting tstat to ${tstatLevel}"    
     }
-    if (lowLimit && vDimmer.currentValue("level") < lowLimit){
+    
+    if (tstatLevel < lowLimit){
     	tstatLevel = lowLimit
+        	//log.debug "Setting tstat to ${tstatLevel}"   
     }
-	log.debug tstatLevel
+
 	//Turn thermostat to proper level depending on mode
-    if (tstat.currentValue("thermostatMode") == "heat") {
-        tstat.setHeatingSetpoint(tstatLevel)	
-    }
-    if (tstat.currentValue("thermostatMode") == "cool") {
-        tstat.setCoolingSetpoint(tstatLevel)	
-    }
+
+	if (currentTemp < tstatLevel) {
+        tstat.setHeatingSetpoint(tstatLevel) 
+           log.info "Setting Heating to ${tstatLevel}"
+		}
+	if (currentTemp > tstatLevel) {
+        tstat.setCoolingSetpoint(tstatLevel)   
+            log.info "Setting Cooling to ${tstatLevel}"
+       	}
 }
 
 //Common Methods
